@@ -1,42 +1,56 @@
+import os
+import requests
+import json
+
+NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+
 def generate_ai_advice(metrics: dict) -> str:
-    """
-    Generates plain-English financial insights.
-    Uses deterministic logic to guarantee free, stable behavior.
-    """
+    api_key = os.getenv("NVIDIA_API_KEY")
 
-    income = metrics.get("total_income", 0)
-    expenses = metrics.get("total_expenses", 0)
-    savings = metrics.get("net_savings", 0)
-    savings_rate = metrics.get("savings_rate", 0)
+    if not api_key:
+        raise RuntimeError("NVIDIA_API_KEY is missing. AI advisory cannot run.")
 
-    lines = []
+    prompt = f"""
+You are a financial analysis assistant.
 
-    lines.append(f"Your total income is ${income:.2f}.")
-    lines.append(f"Your total expenses are ${expenses:.2f}.")
-    lines.append(f"Your net savings are ${savings:.2f}, resulting in a savings rate of {savings_rate:.2f}%.")
+Using the following computed metrics, generate clear, practical financial insights.
+Reference numbers explicitly. Avoid generic advice.
 
-    if savings_rate < 10:
-        lines.append("Your savings rate is relatively low. You may want to review discretionary spending categories.")
-    elif savings_rate < 20:
-        lines.append("Your savings rate is moderate. Increasing savings slightly could improve financial resilience.")
-    else:
-        lines.append("Your savings rate is strong. You are saving a healthy portion of your income.")
+Metrics:
+- Total Income: ${metrics['total_income']}
+- Total Expenses: ${metrics['total_expenses']}
+- Net Savings: ${metrics['net_savings']}
+- Savings Rate: {metrics['savings_rate']}%
 
-    category_spend = metrics.get("category_spend")
-    if category_spend is not None and not category_spend.empty:
-        top_category = category_spend.index[0]
-        top_amount = category_spend.iloc[0]
-        lines.append(
-            f"Your highest spending category is '{top_category}', totaling ${top_amount:.2f}."
-        )
+Provide:
+1. A short summary
+2. Key observations
+3. One or two actionable suggestions
 
-    anomalies = metrics.get("anomalies")
-    if anomalies is not None and not anomalies.empty:
-        lines.append(
-            "Some transactions appear unusually large compared to your normal spending. Reviewing these may help identify errors or one-time expenses."
-        )
+End with:
+"This is educational financial guidance, not professional financial advice."
+"""
 
-    lines.append("")
-    lines.append("Disclaimer: This is educational financial guidance, not professional financial advice.")
+    payload = {
+        "model": "meta/llama3-70b-instruct",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.3,
+        "max_tokens": 400
+    }
 
-    return "\n".join(lines)
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(
+        NVIDIA_API_URL,
+        headers=headers,
+        data=json.dumps(payload),
+        timeout=30
+    )
+
+    if response.status_code != 200:
+        raise RuntimeError(f"NVIDIA API error: {response.text}")
+
+    return response.json()["choices"][0]["message"]["content"]
