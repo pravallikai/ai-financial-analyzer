@@ -1,13 +1,13 @@
 import os
 import requests
 
-NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 def generate_ai_advice(metrics: dict) -> str:
-    api_key = os.getenv("NVIDIA_API_KEY")
+    api_key = os.getenv("OPENROUTER_API_KEY")
 
     if not api_key:
-        raise RuntimeError("NVIDIA_API_KEY is missing. AI advisory cannot run.")
+        raise RuntimeError("OPENROUTER_API_KEY is missing. AI advisory cannot run.")
 
     prompt = f"""
 You are a financial analysis assistant.
@@ -31,8 +31,10 @@ End with:
 """
 
     payload = {
-        "model": "nemotron-mini-4b-instruct",
-        "messages": [{"role": "user", "content": prompt}],
+        "model": "meta-llama/llama-3.1-8b-instruct",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
         "temperature": 0.3,
         "max_tokens": 400
     }
@@ -43,13 +45,13 @@ End with:
     }
 
     response = requests.post(
-        NVIDIA_API_URL,
+        OPENROUTER_API_URL,
         headers=headers,
         json=payload,
         timeout=30
     )
 
     if response.status_code != 200:
-        raise RuntimeError(f"NVIDIA API error: {response.text}")
+        raise RuntimeError(f"OpenRouter API error: {response.text}")
 
     return response.json()["choices"][0]["message"]["content"]
