@@ -2,9 +2,15 @@ import os
 import requests
 import json
 
+# NVIDIA Chat Completions endpoint
 NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 
+
 def generate_ai_advice(metrics: dict) -> str:
+    """
+    Generate AI-powered financial advice using NVIDIA LLM.
+    """
+
     api_key = os.getenv("NVIDIA_API_KEY")
 
     if not api_key:
@@ -33,7 +39,9 @@ End with:
 
     payload = {
         "model": "meta/llama3-70b-instruct",
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
         "temperature": 0.3,
         "max_tokens": 400
     }
