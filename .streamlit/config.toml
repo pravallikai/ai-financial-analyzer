@@ -1,0 +1,2 @@
+[server] # This is a section header, defining configurations that apply to the Streamlit web server itself.
+fileWatcherType = "none" # Sets the 'fileWatcherType' configuration parameter to the value "none". This tells Streamlit (or the server) NOT to automatically monitor (watch) the source code files for changes. When set to "none", Streamlit won't auto-rerun the app when files are modified, which can be useful in certain server environments (like Docker or cloud deployments) to improve stability or performance.
